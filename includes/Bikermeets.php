@@ -89,14 +89,17 @@ class Bikermeets
         $ret = '<div id="bikermeets">&#160;</div>';
 
         // Get the lat/long for this post.
-        // First use the WPGeo data
-        $latitude = get_post_meta($post->ID, '_wp_geo_latitude', true);
-        $longitude = get_post_meta($post->ID, '_wp_geo_longitude', true);
+        // First use the geotag data
+        global $post;
+        $latitude = get_post_meta($post->ID, '_geotag_lat', true);
+        $longitude = get_post_meta($post->ID, '_geotag_lon', true);
 
-        // TODO: What if we don't have WPGeo? Post properties?
+        // TODO: What if we don't have geotag? Post properties?
+        $venues = $this->getVenues($latitude, $longitude, $this->options['radius'], $this->options['limit']);
+
         $ret .= '<ul>';
-        foreach ($this->getMeets($latitude, $longitude, $this->options['radius'], $this->options['limit']) as $meet) {
-            $ret .= '<li>' . $meet->name . '</li>';
+        foreach ($venues as $venue) {
+            $ret .= '<li>' . $venue->name . '</li>';
         }
         $ret .= '</ul>';
 
@@ -229,9 +232,19 @@ class Bikermeets
         return $this->options;
     }
 
-    private function getMeets($latitude, $longitude, $radius, $limit) {
+    /**
+     * Gets an array of Venues nearby.
+     *
+     * @param $latitude
+     * @param $longitude
+     * @param $radius
+     * @param $limit
+     * @return array
+     */
+    private function getVenues($latitude, $longitude, $radius, $limit) {
 
-        $url = "http://bikermeets.cc/Svc/Venues/-json?lat=$latitude&lon=$longitude&rad=$radius&lim=$limit";
+        $url = "http://bikermeets.cc/Svc/Venues/-json?lat={$latitude}&lon={$longitude}&rad={$radius}&lim={$limit}";
+//        file_put_contents('/var/tmp/debug.log', 'File: ' . __FILE__ . ' Line: ' . __LINE__ . " url: " . print_r($url, true) . "\n", FILE_APPEND);
 
         $ch = curl_init($url);
         $curlOptions = array(
@@ -239,13 +252,22 @@ class Bikermeets
             CURLOPT_HTTPHEADER => array('Accept: application/json')
         );
 
-        curl_setopt_array($ch, $curlOptions );
+        curl_setopt_array($ch, $curlOptions);
 
-        $json = json_decode(curl_exec($ch));
+        $raw = curl_exec($ch);
+
+//        file_put_contents('/var/tmp/debug.log', 'File: ' . __FILE__ . ' Line: ' . __LINE__ . " raw: " . print_r($raw, true) . "\n", FILE_APPEND);
+
+        $json = json_decode($raw);
 
         $meets = array();
-        foreach ($json->venues as $venue) {
-            $meets[] = new Venue($venue->Id, $venue->Name, 'http://bikermeets.cc/Home/Venue/' . $venue->Id);
+        foreach ($json->Venues as $venue) {
+            $meets[] = new Venue($venue->Venue->Id, $venue->Venue->Name, 'http://bikermeets.cc/Home/Venue/' . $venue->Venue->Id);
+        }
+
+        // Limit doesn't seem to work on the api
+        if (sizeof($meets) > $limit) {
+            $meets = array_slice($meets, 0, $limit);
         }
 
         return $meets;
