@@ -31,7 +31,7 @@ define('BIKERMEETS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('BIKERMEETS_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 // Includes
-include_once BIKERMEETS_PLUGIN_DIR . 'includes/Gpxpress.php';
+include_once BIKERMEETS_PLUGIN_DIR . 'includes/Bikermeets.php';
 
 // The main plugin class
 $bikermeets = new Bikermeets();
