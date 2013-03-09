@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+require_once 'Venue.php';
+
 class Bikermeets
 {
 
@@ -88,9 +90,15 @@ class Bikermeets
 
         // Get the lat/long for this post.
         // First use the WPGeo data
-        $wpgeoOptions = get_option('bikermeets_options');
-        if (!is_array($this->options)) {
-        
+        $latitude = get_post_meta($post->ID, '_wp_geo_latitude', true);
+        $longitude = get_post_meta($post->ID, '_wp_geo_longitude', true);
+
+        // TODO: What if we don't have WPGeo? Post properties?
+        $ret .= '<ul>';
+        foreach ($this->getMeets($latitude, $longitude, $this->options['radius'], $this->options['limit']) as $meet) {
+            $ret .= '<li>' . $meet->name . '</li>';
+        }
+        $ret .= '</ul>';
 
         return $ret;
     }
@@ -219,6 +227,28 @@ class Bikermeets
         }
 
         return $this->options;
+    }
+
+    private function getMeets($latitude, $longitude, $radius, $limit) {
+
+        $url = "http://bikermeets.cc/Svc/Venues/-json?lat=$latitude&lon=$longitude&rad=$radius&lim=$limit";
+
+        $ch = curl_init($url);
+        $curlOptions = array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => array('Accept: application/json')
+        );
+
+        curl_setopt_array($ch, $curlOptions );
+
+        $json = json_decode(curl_exec($ch));
+
+        $meets = array();
+        foreach ($json->venues as $venue) {
+            $meets[] = new Venue($venue->Id, $venue->Name, 'http://bikermeets.cc/Home/Venue/' . $venue->Id);
+        }
+
+        return $meets;
     }
 }
 
