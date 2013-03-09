@@ -21,6 +21,7 @@ require_once 'Venue.php';
 
 class Bikermeets
 {
+    const BASE_URL = 'http://bikermeets.cc';
 
     // Default values for all plugin options.
     // To add a new option just add it to this array.
@@ -101,11 +102,11 @@ class Bikermeets
         if (sizeof($venues) > 0) {
             $ret .= '<ul>';
             foreach ($venues as $venue) {
-                $ret .= '<li><a target="_blank" href="' . $venue->url . '">' . $venue->name . '</a></li>';
+                $ret .= '<li><a target="_blank" href="' . $venue->getUrl() . '">' . $venue->getName() . '</a></li>';
             }
             $ret .= '</ul>';
         } else {
-            $ret .= 'No nearby meeting places found. <a target="_blank" href="http://bikermeets.cc">Add one at bikermeets.cc.</a>';
+            $ret .= 'No nearby meeting places found. <a target="_blank" href="' . self::BASE_URL . '">Add one at bikermeets.cc.</a>';
         }
 
         $ret .= '</div>';
@@ -245,12 +246,11 @@ class Bikermeets
      * @param $longitude
      * @param $radius
      * @param $limit
-     * @return array
+     * @return array array of Venue objects.
      */
     private function getVenues($latitude, $longitude, $radius, $limit) {
 
-        $url = "http://bikermeets.cc/Svc/Venues/-json?lat={$latitude}&lon={$longitude}&rad={$radius}&lim={$limit}";
-//        file_put_contents('/var/tmp/debug.log', 'File: ' . __FILE__ . ' Line: ' . __LINE__ . " url: " . print_r($url, true) . "\n", FILE_APPEND);
+        $url = self::BASE_URL . "/Svc/Venues/-json?lat={$latitude}&lon={$longitude}&rad={$radius}&lim={$limit}";
 
         $ch = curl_init($url);
         $curlOptions = array(
@@ -261,14 +261,11 @@ class Bikermeets
         curl_setopt_array($ch, $curlOptions);
 
         $raw = curl_exec($ch);
-
-//        file_put_contents('/var/tmp/debug.log', 'File: ' . __FILE__ . ' Line: ' . __LINE__ . " raw: " . print_r($raw, true) . "\n", FILE_APPEND);
-
         $json = json_decode($raw);
 
         $meets = array();
         foreach ($json->Venues as $venue) {
-            $meets[] = new Venue($venue->Venue->Id, $venue->Venue->Name, 'http://bikermeets.cc/Home/Venue/' . $venue->Venue->Id);
+            $meets[] = new Venue($venue->Venue->Id, $venue->Venue->Name);
         }
 
         // Limit doesn't seem to work on the api

@@ -17,15 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-class Venue {
+class Venue
+{
 
-    public function __construct($id, $name, $url) {
+    public function __construct($id, $name) {
         $this->id = $id;
         $this->name = $name;
-        $this->url = $url;
     }
 
-    public $id;
-    public $name;
-    public $url;
+    private  $id;
+    private  $name;
+
+    public function getId() {
+        return $this->id;
+    }
+
+    public function getName() {
+        return $this->name;
+    }
+
+    public function getUrl() {
+        return Bikermeets::BASE_URL . '/Home/Venue/' . $this->id;
+    }
 }
