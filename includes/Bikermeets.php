@@ -86,23 +86,28 @@ class Bikermeets
         extract(shortcode_atts($defaults, $atts));
 
         // Create a div to show the links.
-        $ret = '<div id="bikermeets">&#160;</div>';
+//        $ret = '<div id="bikermeets">&#160;</div>';
 
         // Get the lat/long for this post.
-        // First use the geotag data
         global $post;
-        $latitude = get_post_meta($post->ID, '_geotag_lat', true);
-        $longitude = get_post_meta($post->ID, '_geotag_lon', true);
+        $latitude = get_post_meta($post->ID, '_wp_geo_latitude', true);
+        $longitude = get_post_meta($post->ID, '_wp_geo_longitude', true);
 
         // TODO: What if we don't have geotag? Post properties?
         $venues = $this->getVenues($latitude, $longitude, $this->options['radius'], $this->options['limit']);
 
-        $ret .= '<ul>';
-        foreach ($venues as $venue) {
-            $ret .= '<li>' . $venue->name . '</li>';
+        $ret = '<div id="bikermeets">';
+        if (sizeof($venues) > 0) {
+            $ret .= '<ul>';
+            foreach ($venues as $venue) {
+                $ret .= '<li><a target="_blank" href="' . $venue->url . '">' . $venue->name . '</a></li>';
+            }
+            $ret .= '</ul>';
+        } else {
+            $ret .= 'No nearby meeting places. <a target="_blank" href="http://bikermeets.cc">Suggest one.</a>';
         }
-        $ret .= '</ul>';
 
+        $ret .= '</div>';
         return $ret;
     }
 
