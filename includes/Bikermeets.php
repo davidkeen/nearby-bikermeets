@@ -85,6 +85,7 @@ class Bikermeets
             'limit' => $this->options['limit']);
         extract(shortcode_atts($defaults, $atts));
 
+        // TODO: Ajaxify this so we can do it asynchronously.
         // Create a div to show the links.
 //        $ret = '<div id="bikermeets">&#160;</div>';
 
@@ -93,7 +94,7 @@ class Bikermeets
         $latitude = get_post_meta($post->ID, '_wp_geo_latitude', true);
         $longitude = get_post_meta($post->ID, '_wp_geo_longitude', true);
 
-        // TODO: What if we don't have geotag? Post properties?
+        // TODO: What if we don't have wpgeo plugin? Post properties?
         $venues = $this->getVenues($latitude, $longitude, $this->options['radius'], $this->options['limit']);
 
         $ret = '<div id="bikermeets">';
@@ -104,7 +105,7 @@ class Bikermeets
             }
             $ret .= '</ul>';
         } else {
-            $ret .= 'No nearby meeting places. <a target="_blank" href="http://bikermeets.cc">Suggest one.</a>';
+            $ret .= 'No nearby meeting places found. <a target="_blank" href="http://bikermeets.cc">Add one at bikermeets.cc.</a>';
         }
 
         $ret .= '</div>';
